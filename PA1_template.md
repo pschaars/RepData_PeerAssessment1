@@ -55,14 +55,16 @@ dataset.
 
 the github repository was cloned and the directory set
 
-```{r, message=FALSE, warning=FALSE}
+
+```r
 require(data.table)
 require(dplyr)
 require(ggplot2)
 ```
 
 1. Load the data (i.e. `fread()`)
-```{r}
+
+```r
 unzip("activity.zip")
 activity <- fread("activity.csv") %>% mutate(date= as.Date(date))
 ```
@@ -71,21 +73,33 @@ activity <- fread("activity.csv") %>% mutate(date= as.Date(date))
 ### What is mean total number of steps taken per day?
 
 A histogram of the total number of steps taken each day
-```{r}
+
+```r
 total <- activity %>% group_by(date) %>% summarize(dailySteps = sum(steps))
 hist(total$dailySteps, breaks = 10)
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+
 The **mean** and **median** total number of steps taken per day
-```{r}
+
+```r
 total %>% summarize(mean = mean(dailySteps, na.rm=TRUE), median = median(dailySteps, na.rm=TRUE))
+```
+
+```
+## # A tibble: 1 x 2
+##    mean median
+##   <dbl>  <int>
+## 1 10766  10765
 ```
 
 
 ### The average daily activity pattern
 
 A time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
-```{r}
+
+```r
 intervalAverage <- activity %>% 
   group_by(interval) %>% 
   summarize(intervalSteps = mean(steps, na.rm=TRUE)) 
@@ -94,9 +108,19 @@ ggplot(intervalAverage, aes(x=interval, y=intervalSteps)) +
   geom_line()
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+
 The 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps
-```{r}
+
+```r
 intervalAverage[intervalAverage$intervalSteps==max(intervalAverage$intervalSteps), "interval"]
+```
+
+```
+## # A tibble: 1 x 1
+##   interval
+##      <int>
+## 1      835
 ```
 
 
@@ -107,14 +131,20 @@ values (coded as `NA`). The presence of missing days may introduce
 bias into some calculations or summaries of the data.
 
 The total number of missing values in the dataset (i.e. the total number of rows with `NA`s)
-```{r}
+
+```r
 sum(is.na(activity$steps))
+```
+
+```
+## [1] 2304
 ```
 
 
 
 New dataset that is equal to the original dataset but with the missing data filled in.
-```{r, message=FALSE}
+
+```r
 temp <- activity[is.na(activity$steps), ]
 activityImputed <- activity[!(is.na(activity$steps)), ]
 activityImputed <- temp %>% 
@@ -126,26 +156,42 @@ activityImputed <- temp %>%
 
 
 Histogram of the total number of steps taken each day and Calculate and report the **mean** and **median** total number of steps taken per day. No sustantial change from ignoring NAs. 
-```{r}
+
+```r
 total <- activityImputed %>% group_by(date) %>% summarize(dailySteps = sum(steps))
 hist(total$dailySteps, breaks = 10)
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+
+```r
 total %>% summarize(mean = mean(dailySteps), median = median(dailySteps))
+```
+
+```
+## # A tibble: 1 x 2
+##    mean median
+##   <dbl>  <dbl>
+## 1 10766  10766
 ```
 
 
 ### Are there differences in activity patterns between weekdays and weekends?
 
 New factor variable in the dataset with two levels -- "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
-```{r}
+
+```r
 activityImputed <- activityImputed %>% 
   mutate(weekend = factor(weekdays(date)=="Saturday" | weekdays(date)=="Sunday", labels=c("Weekday", "Weekend")))
 total <- activityImputed %>% group_by(interval, weekend) %>% summarize(steps = sum(steps))
 ```
 
 Panel plot containing a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). 
-```{r}
+
+```r
 ggplot(total, aes(x=interval, y=steps)) + 
   geom_line() + 
   facet_wrap(~weekend)
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
